@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="/cart.css" />
+    <title>Shopping Cart Example</title>
+  </head>
+
+  <body>
+    <div class="Cart-Container">
+      <div class="Header">
+        <h3 class="Heading">Shopping Cart</h3>
+      </div>
+      <div id="products">
+        <div
+          class="product"
+          data-product-id="1"
+          data-price="10"
+          data-img-src="img/product1.jpg"
+        >
+          <img src="img/product1.jpg" alt="" />
+          <h3>Product 1 - $10</h3>
+          <button class="add-to-cart">Add to Cart</button>
+          <button class="remove-to-cart">Remove to Cart</button>
+        </div>
+        <div
+          class="product"
+          data-product-id="2"
+          data-price="17"
+          data-img-src="img/product2.jpg"
+        >
+          <img src="img/product2.jpg" alt="" />
+          <h3>Product 2 - $17</h3>
+          <button class="add-to-cart">Add to Cart</button>
+          <button class="remove-to-cart">Remove to Cart</button>
+        </div>
+        <div
+          class="product"
+          data-product-id="3"
+          data-price="9"
+          data-img-src="img/product3.jpg"
+        >
+          <img src="img/product3.jpg" alt="" />
+          <h3>Product 3 - $9</h3>
+          <button class="add-to-cart">Add to Cart</button>
+          <button class="remove-to-cart">Remove to Cart</button>
+        </div>
+      </div>
+      <div class="cart">
+        <h2>Cart</h2>
+        <div id="cartlist">
+          <p>No items in cart.</p>
+        </div>
+        <button id="Download">Download PDF</button>
+      </div>
+    </div>
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+      const cart = {};
+
+      document.querySelectorAll(".add-to-cart").forEach((button) => {
+        button.addEventListener("click", () => {
+          const productElement = button.closest(".product");
+          const productId = productElement.getAttribute("data-product-id");
+          const price = parseFloat(productElement.getAttribute("data-price"));
+          const imgSrc = productElement.getAttribute("data-img-src");
+
+          if (!cart[productId]) {
+            cart[productId] = { quantity: 1, price: price, imgSrc: imgSrc };
+          } else {
+            cart[productId].quantity++;
+          }
+          updateCartDisplay();
+        });
+      });
+
+      document.querySelectorAll(".remove-to-cart").forEach((button) => {
+        button.addEventListener("click", () => {
+          const productElement = button.closest(".product");
+          const productId = productElement.getAttribute("data-product-id");
+
+          if (cart[productId]) {
+            if (cart[productId].quantity > 1) {
+              cart[productId].quantity--;
+            } else {
+              delete cart[productId];
+            }
+            updateCartDisplay();
+          }
+        });
+      });
+
+      function updateCartDisplay() {
+        const cartElement = document.getElementById("cartlist");
+        cartElement.innerHTML = "";
+
+        let totalPrice = 0;
+        for (const productId in cart) {
+          const item = cart[productId];
+          const itemTotalPrice = item.quantity * item.price;
+
+          totalPrice += itemTotalPrice;
+
+          const productElement = document.createElement("div");
+          productElement.classList.add("cart-item");
+
+          const imgElement = document.createElement("img");
+          imgElement.src = item.imgSrc;
+          imgElement.alt = `Product ${productId}`;
+
+          const textElement = document.createElement("p");
+          textElement.textContent = `Product ${productId}: ${item.quantity} x $${item.price} = $${itemTotalPrice}`;
+
+          productElement.appendChild(imgElement);
+          productElement.appendChild(textElement);
+          cartElement.appendChild(productElement);
+        }
+
+        if (Object.keys(cart).length === 0) {
+          cartElement.innerHTML = "<p>No items in cart.</p>";
+        } else {
+          const totalPriceElement = document.createElement("p");
+          totalPriceElement.textContent = `Total Price: $${totalPrice}`;
+          cartElement.appendChild(totalPriceElement);
+
+          // Call HTML2Canvas to capture the screenshot
+          html2canvas(cartElement).then((canvas) => {
+            const imgDataUrl = canvas.toDataURL("image/png");
+
+            // Create a link element to download the image
+            const link = document.createElement("a");
+            link.href = imgDataUrl;
+            link.download = "cartScreenshot.png";
+
+            
+            
+          });
+        }
+      }
+
+      function captureScreenshotAndExportPDF() {
+        // Create a canvas from the cartlist
+        html2canvas(document.getElementById("cartlist")).then((canvas) => {
+          // Convert canvas to base64 image data
+          const imgData = canvas.toDataURL("image/png");
+
+          // Create a PDF document
+          const pdf = new jsPDF();
+
+          // Add image to PDF document
+          pdf.addImage(imgData, "PNG", 10, 10);
+
+          // Save or download the PDF
+          pdf.save("cartlist.pdf");
+        });
+      }
+
+      // Add event listener to the Download button
+      document.getElementById("Download").addEventListener("click", () => {
+        captureScreenshotAndExportPDF();
+      });
+    </script>
+  </body>
+</html>
